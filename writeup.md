@@ -24,7 +24,7 @@ I started by manually tuning the P parameter. I wanted to map values [-1,1] -> [
 
 The D parameter needed to map [-0.01,0.01] -> [-1,1] with negative correlation, so -1/0.01 = -100 is the starting point. But, the P parameter should be doing most of the work, and the contribution of D should be around an order of magnitude less than P, so I started with -100/10 = -10. This turned out to be a good guess.
 
-I also implemented an on-line twiddling function to try and optimise the parameters further. It takes the total error of a large sample of driving after changing a parameter to see if there was improvement, and keeps the change if it was good. This is done continuously for all parameters. This confirmed that the I parameter should be zero, and helped fine tune P and D to the final P = -0.21 and D = -9. The time required to run the optimizer is non-trivial, so I stopped when the performance was ok, used those parameters, and left the twiddling on for submission.
+I also implemented an on-line twiddling function to try and optimise the parameters further. It takes the total error of a large sample of driving after changing a parameter to see if there was improvement, and keeps the change if it was good. This is done continuously for all parameters. This confirmed that the I parameter should be zero, and helped fine tune P and D to the final P = -0.21 and D = -9. The time required to run the optimizer is non-trivial, so I stopped when the performance was ok, and used those parameters. Twiddling is turned off for the submission code.
 
 Here are examples of running the simulator with this code:
 
