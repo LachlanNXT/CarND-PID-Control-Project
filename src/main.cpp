@@ -61,7 +61,7 @@ int main()
           pid.UpdateError(cte);
           double err = pid.TotalError();
           // for on-line twiddling...
-          pid.Twiddle();
+          // pid.Twiddle();
           double correction = pid.Calculate();
           steer_value = correction;
 
