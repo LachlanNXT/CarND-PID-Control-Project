@@ -9,6 +9,9 @@ public:
   double p_error;
   double i_error;
   double d_error;
+  double old_cte;
+  double total_error;
+  double best_error;
 
   /*
   * Coefficients
@@ -16,6 +19,13 @@ public:
   double Kp;
   double Ki;
   double Kd;
+
+  int N;
+  double p[3];
+  double dp[3];
+  int tries[3];
+  int index;
+  bool test;
 
   /*
   * Constructor
@@ -41,6 +51,14 @@ public:
   * Calculate the total PID error.
   */
   double TotalError();
+
+  /*
+  * Calculate the total PID error.
+  */
+  double Calculate();
+
+  void Twiddle();
+
 };
 
 #endif /* PID_H */
