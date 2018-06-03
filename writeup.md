@@ -29,6 +29,6 @@ I also implemented an on-line twiddling function to try and optimise the paramet
 Here are examples of running the simulator with this code:
 
 [//]: # (Image References)
-[image1]: ./Capture.png
+[image1]: ./Capture.PNG
 
-![alt text][image2]
+![alt text][image1]
