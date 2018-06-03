@@ -1,98 +1,34 @@
-# CarND-Controls-PID
+# CarND-Controls-PID Writeup
 Self-Driving Car Engineer Nanodegree Program
 
 ---
 
-## Dependencies
+Things to note:
+* Had to run the simulator under host windows, and code under linux VM, since simulator was unusably slow in VM.
+* Used this to link VM to host: https://discussions.udacity.com/t/running-simulator-on-windows-and-code-on-ubuntu/255869
 
-* cmake >= 3.5
- * All OSes: [click here for installation instructions](https://cmake.org/install/)
-* make >= 4.1(mac, linux), 3.81(Windows)
-  * Linux: make is installed by default on most Linux distros
-  * Mac: [install Xcode command line tools to get make](https://developer.apple.com/xcode/features/)
-  * Windows: [Click here for installation instructions](http://gnuwin32.sourceforge.net/packages/make.htm)
-* gcc/g++ >= 5.4
-  * Linux: gcc / g++ is installed by default on most Linux distros
-  * Mac: same deal as make - [install Xcode command line tools]((https://developer.apple.com/xcode/features/)
-  * Windows: recommend using [MinGW](http://www.mingw.org/)
-* [uWebSockets](https://github.com/uWebSockets/uWebSockets)
-  * Run either `./install-mac.sh` or `./install-ubuntu.sh`.
-  * If you install from source, checkout to commit `e94b6e1`, i.e.
-    ```
-    git clone https://github.com/uWebSockets/uWebSockets 
-    cd uWebSockets
-    git checkout e94b6e1
-    ```
-    Some function signatures have changed in v0.14.x. See [this PR](https://github.com/udacity/CarND-MPC-Project/pull/3) for more details.
-* Simulator. You can download these from the [project intro page](https://github.com/udacity/self-driving-car-sim/releases) in the classroom.
+## P I D components
+P - proportional. This parameter affects speed of convergence, overshoot and stability. Generally, quicker convergence = more overshoot, and trying to converge too quick is unstable.
+I - inetegral. Accounts for systematic/contstant offset errors, of which there are none in a perfect simulation, so I = 0.
+D - derivative. Counteracts the negative affects of P, i.e. overshoot and instability. When the error is changing rapidly this has more of an effect than if it is changing slowly.
 
-There's an experimental patch for windows in this [PR](https://github.com/udacity/CarND-PID-Control-Project/pull/3)
+## Hyperparameter tuning
+There are several things to take into account when tuning:
 
-## Basic Build Instructions
+* What is the output domain? [-1,1]
+* What do the error values usually look like? Generally, |e| < 1 when car is in ok state.
+* What do the d(error)/dt values usually look like? Generally, |e| < 0.01 when car is in ok state.
+* Is the integral parameter useful here? Not in simulation without any systematic errors.
 
-1. Clone this repo.
-2. Make a build directory: `mkdir build && cd build`
-3. Compile: `cmake .. && make`
-4. Run it: `./pid`. 
+I started by manually tuning the P parameter. I wanted to map values [-1,1] -> [-1,1], where positive error means you should steer negatively and negative error means you should steer positively. So a P of -1/1 = -1 should be close. I started with -1 and experimented with values until I was more or less happy with a value of -0.2.
 
-Tips for setting up your environment can be found [here](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/0949fca6-b379-42af-a919-ee50aa304e6a/lessons/f758c44c-5e40-4e01-93b5-1a82aa4e044f/concepts/23d376c7-0195-4276-bdf0-e02f1f3c665d)
+The D parameter needed to map [-0.01,0.01] -> [-1,1] with negative correlation, so -1/0.01 = -100 is the starting point. But, the P parameter should be doing most of the work, and the contribution of D should be around an order of magnitude less than P, so I started with -100/10 = -10. This turned out to be a good guess.
 
-## Editor Settings
+I also implemented an on-line twiddling function to try and optimise the parameters further. It takes the total error of a large sample of driving after changing a parameter to see if there was improvement, and keeps the change if it was good. This is done continuously for all parameters. This confirmed that the I parameter should be zero, and helped fine tune P and D to the final P = -0.21 and D = -9. The time required to run the optimizer is non-trivial, so I stopped when the performance was ok, and used those parameters. Twiddling is turned off for the submission code.
 
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
+Here are examples of running the simulator with this code:
 
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
+[//]: # (Image References)
+[image1]: ./Capture.PNG
 
-## Code Style
-
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
-
-## Project Instructions and Rubric
-
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
-
-More information is only accessible by people who are already enrolled in Term 2
-of CarND. If you are enrolled, see [the project page](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/f1820894-8322-4bb3-81aa-b26b3c6dcbaf/lessons/e8235395-22dd-4b87-88e0-d108c5e5bbf4/concepts/6a4d8d42-6a04-4aa6-b284-1697c0fd6562)
-for instructions and the project rubric.
-
-## Hints!
-
-* You don't have to follow this directory structure, but if you do, your work
-  will span all of the .cpp files here. Keep an eye out for TODOs.
-
-## Call for IDE Profiles Pull Requests
-
-Help your fellow students!
-
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to we ensure
-that students don't feel pressured to use one IDE or another.
-
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
-
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
-
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
-
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
-
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
-
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
-
+![alt text][image1]
